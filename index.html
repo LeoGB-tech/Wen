@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ancre — le web, hors ligne</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d1b18'/%3E%3Cg fill='none' stroke='%23f4f0e8' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='16' cy='8.5' r='2.6'/%3E%3Cpath d='M16 11v14M10 15h12M7.5 19.5c1.5 4 4.8 5.8 8.5 5.8s7-1.8 8.5-5.8'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f3efe6; --paper:#fbf9f4; --ink:#1d1b18; --ink2:#3a3631; --mute:#736b5f; --faint:#a59d90;
+  --line:#ddd5c6; --line2:#cbc2b1; --acc:#c2410c; --acc-ink:#fff; --acc-soft:#f6e1d3;
+  --ok:#3f7d4e; --warn:#a16207; --err:#b42318;
+  --shadow:0 1px 0 rgba(29,27,24,.04), 0 10px 30px -18px rgba(29,27,24,.35);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  --r:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#121110; --paper:#1a1917; --ink:#efe9dd; --ink2:#d6cfc1; --mute:#a0978a; --faint:#6f685e;
+    --line:#2d2a26; --line2:#3c3833; --acc:#fb8c4c; --acc-ink:#1a0d05; --acc-soft:#3a2113;
+    --ok:#7cc48c; --warn:#e3b341; --err:#f97066;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 14px 34px -20px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font:15px/1.5 var(--sans);
+  -webkit-font-smoothing:antialiased; min-height:100vh;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.mono{font-family:var(--mono)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ── Barre du haut ── */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:18px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+.brand svg{width:30px;height:30px}
+.brand b{font:600 22px/1 var(--serif);letter-spacing:-.01em}
+.search{flex:1;max-width:460px;margin-left:auto;position:relative}
+.search input{width:100%;height:40px;border-radius:999px;border:1px solid var(--line2);background:var(--paper);padding:0 16px 0 38px;outline:none;transition:border-color .15s,box-shadow .15s}
+.search input:focus{border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 10%,transparent)}
+.search svg{position:absolute;left:13px;top:11px;width:18px;height:18px;color:var(--faint)}
+.net{flex:none;display:flex;align-items:center;gap:7px;font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.net i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 20%,transparent)}
+.net.off i{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 22%,transparent)}
+
+/* ── Accueil ── */
+.hero{padding:64px 0 36px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:end}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+h1{font:600 clamp(40px,5.6vw,68px)/1.02 var(--serif);letter-spacing:-.025em;margin:16px 0 18px}
+h1 em{font-style:italic;color:var(--acc)}
+.lede{color:var(--mute);font-size:17px;max-width:520px;margin:0}
+.ledger{border-left:1px solid var(--line2);padding-left:28px;display:grid;gap:14px}
+.ledger div{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:baseline}
+.ledger span{font:600 12px var(--mono);color:var(--faint)}
+.ledger p{margin:0;color:var(--ink2)}
+
+.grab{background:var(--paper);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--shadow);padding:10px;margin-bottom:12px}
+.grab form{display:flex;gap:10px;align-items:stretch}
+.field{flex:1;display:flex;align-items:center;min-width:0;border-radius:13px;background:var(--bg);border:1px solid transparent;transition:border-color .15s}
+.field:focus-within{border-color:var(--ink)}
+.field label{padding:0 4px 0 18px;font:500 14px var(--mono);color:var(--faint);white-space:nowrap}
+.field input{flex:1;min-width:0;height:58px;border:0;background:none;outline:none;font:500 17px var(--mono);padding:0 14px 0 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid var(--line2);background:var(--paper);height:40px;padding:0 16px;font-weight:550;font-size:14px;transition:transform .08s,background .15s,border-color .15s;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:16px;height:16px}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover{background:color-mix(in srgb,var(--ink) 86%,var(--acc))}
+.btn.big{height:60px;padding:0 26px;font-size:16px;border-radius:13px}
+.btn.ghost{background:none;border-color:transparent}
+.btn.ghost:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);border-color:transparent}
+.btn.danger:hover{color:var(--err);border-color:var(--err)}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.icon{width:40px;padding:0}
+
+.opts-toggle{display:flex;align-items:center;gap:8px;padding:10px 12px 4px;color:var(--mute);font-size:13px;background:none;border:0}
+.opts-toggle svg{width:14px;height:14px;transition:transform .2s}
+.opts-toggle[aria-expanded="true"] svg{transform:rotate(90deg)}
+.opts{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 26px;padding:14px 12px 10px}
+.opts.open{display:grid}
+.opt{display:grid;gap:6px}
+.opt>span{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.range{display:flex;align-items:center;gap:12px}
+.range input{flex:1;accent-color:var(--acc)}
+.range output{font:600 14px var(--mono);min-width:44px;text-align:right}
+.check{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--ink2);cursor:pointer;line-height:1.35}
+.check input{margin:2px 0 0;accent-color:var(--acc);width:16px;height:16px;flex:none}
+.check small{display:block;color:var(--faint);font-size:12px}
+.hint{color:var(--faint);font-size:13px;padding:0 6px}
+
+/* ── Sections ── */
+section{padding:28px 0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--ink);padding-bottom:10px;margin-bottom:22px}
+.sec-head h2{font:600 26px/1.1 var(--serif);margin:0;letter-spacing:-.01em}
+.sec-head .meta{font:500 12px var(--mono);color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+
+/* ── Tâches ── */
+.jobs{display:grid;gap:14px}
+.job{background:var(--paper);border:1px solid var(--line2);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow);display:grid;gap:14px}
+.job-top{display:flex;align-items:center;gap:14px}
+.job-top .t{flex:1;min-width:0}
+.job-top h3{margin:0;font:600 19px/1.2 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job-top .u{font:13px var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.badge.running{color:var(--acc)}.badge.done{color:var(--ok)}.badge.cancelled{color:var(--warn)}.badge.failed{color:var(--err)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--acc);border-radius:99px;transition:width .5s ease}
+.bar.indet i{width:30%!important;animation:slide 1.3s ease-in-out infinite}
+@keyframes slide{0%{left:-30%}100%{left:100%}}
+.nums{display:flex;flex-wrap:wrap;gap:8px 26px}
+.num b{display:block;font:600 22px/1 var(--mono);letter-spacing:-.02em}
+.num span{font-size:12px;color:var(--mute)}
+.ticker{font:12.5px/1.5 var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticker::before{content:"↳ ";color:var(--acc)}
+details.log summary{cursor:pointer;color:var(--mute);font-size:13px;list-style:none}
+details.log summary::before{content:"▸ ";}
+details.log[open] summary::before{content:"▾ ";}
+.log ol{list-style:none;margin:10px 0 0;padding:12px 14px;border-radius:10px;background:var(--bg);font:12px/1.65 var(--mono);max-height:180px;overflow:auto}
+.log li.error{color:var(--err)}.log li.warn{color:var(--warn)}
+
+/* ── Bibliothèque ── */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.box{position:relative;background:var(--paper);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s}
+.box:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(0,0,0,.04),0 22px 40px -24px rgba(29,27,24,.5)}
+.spine{height:92px;position:relative;background:var(--h);display:flex;align-items:flex-end;padding:0 18px 0;cursor:pointer;overflow:hidden}
+.spine::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(255,255,255,.07) 22px 23px)}
+.spine .tag{position:absolute;top:14px;right:14px;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.88);background:rgba(0,0,0,.18);padding:4px 8px;border-radius:6px}
+.fav{position:relative;width:52px;height:52px;border-radius:12px;background:var(--paper);border:1px solid var(--line2);margin-bottom:-26px;display:grid;place-items:center;overflow:hidden;box-shadow:0 6px 16px -8px rgba(0,0,0,.4)}
+.fav img{width:30px;height:30px;object-fit:contain}
+.fav span{font:600 24px var(--serif);color:var(--h)}
+.box-body{padding:36px 18px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.box h3{margin:0;font:600 19px/1.22 var(--serif);letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.box .host{font:12.5px var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.box .stats{display:flex;gap:14px;margin-top:8px;padding-top:12px;border-top:1px dashed var(--line2);font:12px var(--mono);color:var(--ink2)}
+.box .stats span{white-space:nowrap}
+.box .stats em{font-style:normal;color:var(--faint)}
+.box-actions{display:flex;gap:6px;padding:0 12px 12px}
+.box-actions .btn{height:36px;font-size:13px;padding:0 12px}
+.box-actions .btn.primary{flex:1}
+.box.busy .spine::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,#fff,transparent);animation:slide 1.4s linear infinite;width:40%}
+
+.empty{border:1px dashed var(--line2);border-radius:20px;padding:56px 24px;text-align:center;color:var(--mute)}
+.empty svg{width:54px;height:54px;color:var(--faint);margin-bottom:10px}
+.empty h3{font:600 22px var(--serif);color:var(--ink);margin:0 0 6px}
+.empty p{margin:0 auto;max-width:440px}
+
+/* ── Résultats de recherche ── */
+.results{display:grid;gap:4px}
+.res{display:block;text-decoration:none;padding:16px 18px;border-radius:12px;border:1px solid transparent;cursor:pointer}
+.res:hover{background:var(--paper);border-color:var(--line2)}
+.res .s{font:12px var(--mono);color:var(--acc);margin-bottom:4px}
+.res h4{margin:0 0 4px;font:600 18px/1.25 var(--serif)}
+.res p{margin:0;color:var(--mute);font-size:14px}
+.res mark{background:var(--acc-soft);color:inherit;padding:0 2px;border-radius:3px}
+
+/* ── Lecteur ── */
+.reader{position:fixed;inset:0;z-index:50;background:var(--bg);display:none;flex-direction:column}
+.reader.open{display:flex}
+.rbar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line2);background:var(--paper)}
+.rbar .loc{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-radius:10px;background:var(--bg);margin:0 6px}
+.rbar .loc .pill{flex:none;font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ok);display:flex;align-items:center;gap:6px}
+.rbar .loc .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.rbar .loc .pill.miss{color:var(--warn)}
+.rbar .loc .ti{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+.rbar .loc .ur{font:12.5px var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbody{flex:1;display:flex;min-height:0}
+.rbody iframe{flex:1;border:0;background:#fff;min-width:0}
+.drawer{width:0;overflow:hidden;border-left:1px solid var(--line2);background:var(--paper);display:flex;flex-direction:column;transition:width .2s}
+.drawer.open{width:360px}
+.drawer-head{padding:14px 16px 10px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.drawer-head b{font:600 17px var(--serif)}
+.drawer-head input{height:36px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding:0 12px;outline:none;width:100%}
+.plist{flex:1;overflow:auto;padding:6px}
+.plist button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 10px;border-radius:8px;min-width:0}
+.plist button:hover,.plist button.on{background:var(--bg)}
+.plist button.on{box-shadow:inset 3px 0 0 var(--acc)}
+.plist b{display:block;font-weight:550;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plist span{display:block;font:11.5px var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Divers ── */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;z-index:80;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:14px;box-shadow:var(--shadow);transition:all .25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--err);color:#fff}
+dialog{border:1px solid var(--line2);border-radius:18px;background:var(--paper);color:var(--ink);padding:26px;max-width:420px;width:calc(100% - 32px);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(18,17,16,.45);backdrop-filter:blur(2px)}
+dialog h3{margin:0 0 8px;font:600 22px var(--serif)}
+dialog p{margin:0 0 20px;color:var(--mute)}
+dialog .row{display:flex;justify-content:flex-end;gap:8px}
+footer{padding:40px 0 60px;color:var(--faint);font-size:13px;border-top:1px solid var(--line);margin-top:30px}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:28px;padding-top:40px}
+  .ledger{border-left:0;padding-left:0;border-top:1px solid var(--line2);padding-top:22px}
+  .opts{grid-template-columns:1fr 1fr}
+  .drawer.open{position:absolute;right:0;top:57px;bottom:0;width:min(360px,90vw);z-index:2;box-shadow:var(--shadow)}
+}
+@media (max-width:620px){
+  .wrap{padding:0 16px}
+  .net span{display:none}
+  .grab form{flex-direction:column}
+  .field label{display:none}.field input{padding-left:16px}
+  .opts{grid-template-columns:1fr}
+  .rbar .loc .ur{display:none}
+  .rbar .loc .ti{max-width:none}
+  .job-top{flex-wrap:wrap}.job-top .t{flex-basis:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#" id="home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><g fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="8.5" r="2.6"/><path d="M16 11v14M10 15h12M7.5 19.5c1.5 4 4.8 5.8 8.5 5.8s7-1.8 8.5-5.8"/></g></svg>
+      <b>Ancre</b>
+    </a>
+    <label class="search">
+      <span class="sr">Chercher dans les sites enregistrés</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Chercher dans mes sites hors ligne…" autocomplete="off">
+    </label>
+    <div class="net" id="net"><i></i><span>En ligne</span></div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div id="homeView">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Bibliothèque hors ligne</div>
+        <h1>Garde le web,<br><em>même sans réseau.</em></h1>
+        <p class="lede">Colle l’adresse d’un site : Ancre récupère ses pages, sous-pages, images et styles, laisse les pubs et les bandeaux de côté, et te le rend consultable hors ligne.</p>
+      </div>
+      <div class="ledger">
+        <div><span>01</span><p>Les liens internes pointent vers les copies locales.</p></div>
+        <div><span>02</span><p>Pubs, traqueurs, bandeaux cookies et scripts retirés.</p></div>
+        <div><span>03</span><p>Une page non téléchargée te le dit clairement, sans casser la navigation.</p></div>
+        <div><span>04</span><p>Recherche plein texte dans tout ce que tu as enregistré.</p></div>
+      </div>
+    </div>
+
+    <div class="grab">
+      <form id="form" autocomplete="off">
+        <div class="field">
+          <label for="url">URL</label>
+          <input id="url" name="url" placeholder="https://exemple.fr" inputmode="url" spellcheck="false" required>
+        </div>
+        <button class="btn primary big" type="submit" id="go">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14"/></svg>
+          Ancrer ce site
+        </button>
+      </form>
+      <button class="opts-toggle" type="button" id="optsToggle" aria-expanded="false" aria-controls="opts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+        Réglages du téléchargement
+      </button>
+      <div class="opts" id="opts">
+        <label class="opt"><span>Pages max</span>
+          <div class="range"><input type="range" id="maxPages" min="10" max="2000" step="10" value="300"><output id="maxPagesO">300</output></div>
+        </label>
+        <label class="opt"><span>Profondeur des liens</span>
+          <div class="range"><input type="range" id="maxDepth" min="0" max="10" value="4"><output id="maxDepthO">4</output></div>
+        </label>
+        <label class="opt"><span>Taille max par fichier</span>
+          <div class="range"><input type="range" id="maxFileMB" min="1" max="200" value="30"><output id="maxFileMBO">30 Mo</output></div>
+        </label>
+        <label class="check"><input type="checkbox" id="samePath"><span>Rester dans le dossier de départ<small>Ex. seulement /docs/… si tu pars de /docs/</small></span></label>
+        <label class="check"><input type="checkbox" id="subdomains"><span>Inclure les sous-domaines<small>blog.site.fr, aide.site.fr…</small></span></label>
+        <label class="check"><input type="checkbox" id="documents" checked><span>Télécharger les documents<small>PDF, Word, Excel liés depuis le site</small></span></label>
+        <label class="check"><input type="checkbox" id="robots" checked><span>Respecter robots.txt<small>Les zones interdites par le site sont ignorées</small></span></label>
+        <label class="check"><input type="checkbox" id="keepScripts"><span>Garder les scripts<small>Pour les sites très interactifs. Plus lourd, peut casser hors ligne</small></span></label>
+      </div>
+    </div>
+    <p class="hint">Les sites qui génèrent tout leur contenu en JavaScript (certaines applis web) peuvent s’enregistrer incomplets.</p>
+
+    <section id="jobsSec" hidden>
+      <div class="sec-head"><h2>En cours</h2><span class="meta" id="jobsMeta"></span></div>
+      <div class="jobs" id="jobs"></div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Ma bibliothèque</h2><span class="meta" id="libMeta"></span></div>
+      <div class="shelf" id="shelf"></div>
+    </section>
+  </div>
+
+  <div id="searchView" hidden>
+    <section>
+      <div class="sec-head"><h2 id="searchTitle">Résultats</h2><span class="meta" id="searchMeta"></span></div>
+      <div class="results" id="results"></div>
+    </section>
+  </div>
+
+  <footer>Ancre fonctionne sur ton ordinateur : rien ne part ailleurs. Les sites sont rangés dans le dossier <span class="mono">sites/</span>.</footer>
+</main>
+
+<div class="reader" id="reader" aria-hidden="true">
+  <div class="rbar">
+    <button class="btn icon ghost" id="rClose" title="Fermer (Échap)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button class="btn icon ghost" id="rBack" title="Précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button class="btn icon ghost" id="rFwd" title="Suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="btn icon ghost" id="rHome" title="Accueil du site"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg></button>
+    <div class="loc"><span class="pill" id="rPill">Hors ligne</span><span class="ti" id="rTitle"></span><span class="ur" id="rUrl"></span></div>
+    <button class="btn ghost" id="rPages" title="Toutes les pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Pages</span></button>
+    <a class="btn icon ghost" id="rTab" title="Ouvrir dans un onglet" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
+  </div>
+  <div class="rbody">
+    <iframe id="frame" title="Site hors ligne"></iframe>
+    <aside class="drawer" id="drawer">
+      <div class="drawer-head"><b id="dTitle">Pages enregistrées</b><input id="dFilter" placeholder="Filtrer…" type="search"></div>
+      <div class="plist" id="plist"></div>
+    </aside>
+  </div>
+</div>
+
+<dialog id="confirm">
+  <h3 id="cTitle">Supprimer ?</h3>
+  <p id="cText"></p>
+  <div class="row"><button class="btn" value="no" id="cNo">Annuler</button><button class="btn primary" id="cYes">Supprimer</button></div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const api = async (p, o = {}) => {
+  const r = await fetch(p, { headers: { 'content-type': 'application/json' }, ...o });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Erreur ' + r.status);
+  return j;
+};
+const fmtBytes = (b) => { if (!b) return '0 o'; const u = ['o', 'Ko', 'Mo', 'Go']; const i = Math.min(3, Math.floor(Math.log(b) / Math.log(1024))); return (b / 1024 ** i).toFixed(i > 1 ? 1 : 0).replace('.', ',') + ' ' + u[i]; };
+const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+const ago = (t) => { const s = (t - Date.now()) / 1000; const a = Math.abs(s);
+  if (a < 60) return 'à l’instant'; if (a < 3600) return rtf.format(Math.round(s / 60), 'minute');
+  if (a < 86400) return rtf.format(Math.round(s / 3600), 'hour'); if (a < 2592000) return rtf.format(Math.round(s / 86400), 'day');
+  return new Date(t).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); };
+const hue = (s) => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 360; };
+const spineColor = (s) => `hsl(${hue(s)} 38% 38%)`;
+const nf = new Intl.NumberFormat('fr-FR');
+
+let toastT;
+function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (err ? ' err' : ''); clearTimeout(toastT); toastT = setTimeout(() => t.className = 'toast' + (err ? ' err' : ''), 3200); }
+
+function ask(title, text, yes = 'Supprimer') {
+  const d = $('#confirm'); $('#cTitle').textContent = title; $('#cText').textContent = text; $('#cYes').textContent = yes;
+  d.showModal();
+  return new Promise((res) => { $('#cYes').onclick = () => { d.close(); res(true); }; $('#cNo').onclick = () => { d.close(); res(false); }; d.oncancel = () => res(false); });
+}
+
+/* ── Réseau ── */
+function netState() { const n = $('#net'); const on = navigator.onLine; n.classList.toggle('off', !on); n.querySelector('span').textContent = on ? 'En ligne' : 'Hors ligne'; $('#go').disabled = !on; }
+addEventListener('online', netState); addEventListener('offline', netState); netState();
+
+/* ── Réglages ── */
+const OPT_KEYS = ['maxPages', 'maxDepth', 'maxFileMB', 'samePath', 'subdomains', 'documents', 'robots', 'keepScripts'];
+function loadOpts() { try { const o = JSON.parse(localStorage.getItem('ancre-opts') || '{}'); for (const k of OPT_KEYS) if (k in o) { const el = $('#' + k); el.type === 'checkbox' ? el.checked = o[k] : el.value = o[k]; } } catch {} }
+function readOpts() { const o = {}; for (const k of OPT_KEYS) { const el = $('#' + k); o[k] = el.type === 'checkbox' ? el.checked : Number(el.value); } return o; }
+function syncOutputs() { $('#maxPagesO').textContent = nf.format($('#maxPages').value); $('#maxDepthO').textContent = $('#maxDepth').value; $('#maxFileMBO').textContent = $('#maxFileMB').value + ' Mo'; }
+loadOpts(); syncOutputs();
+$('#opts').addEventListener('input', () => { syncOutputs(); try { localStorage.setItem('ancre-opts', JSON.stringify(readOpts())); } catch {} });
+$('#optsToggle').onclick = (e) => { const o = $('#opts').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', o); };
+
+/* ── Lancer ── */
+async function startCrawl(url, opts) {
+  try {
+    await api('/api/crawl', { method: 'POST', body: JSON.stringify({ url, ...opts }) });
+    toast('Téléchargement lancé');
+    refresh();
+  } catch (e) { toast(e.message, true); }
+}
+$('#form').onsubmit = (e) => { e.preventDefault(); const u = $('#url').value.trim(); if (!u) return; startCrawl(u, readOpts()); $('#url').value = ''; };
+
+/* ── État ── */
+let sites = [], jobs = [], knownDone = new Set();
+async function refresh() {
+  try { [sites, jobs] = await Promise.all([api('/api/sites'), api('/api/jobs')]); } catch { return; }
+  let changed = false;
+  for (const j of jobs) if (j.status !== 'running' && !knownDone.has(j.jobId)) { knownDone.add(j.jobId); changed = true; }
+  renderJobs(); renderShelf();
+  if (changed) { [sites] = await Promise.all([api('/api/sites')]); renderShelf(); }
+}
+
+function renderJobs() {
+  const sec = $('#jobsSec'), box = $('#jobs');
+  sec.hidden = !jobs.length;
+  const running = jobs.filter((j) => j.status === 'running').length;
+  $('#jobsMeta').textContent = running ? `${running} actif${running > 1 ? 's' : ''}` : 'terminé';
+  const ids = new Set(jobs.map((j) => j.jobId));
+  for (const el of [...box.children]) if (!ids.has(el.dataset.id)) el.remove();
+  for (const j of jobs) {
+    let el = box.querySelector(`[data-id="${CSS.escape(j.jobId)}"]`);
+    if (!el) {
+      el = document.createElement('article'); el.className = 'job'; el.dataset.id = j.jobId;
+      el.innerHTML = `<div class="job-top"><div class="t"><h3></h3><div class="u"></div></div><span class="badge"></span><span class="acts"></span></div>
+        <div class="bar"><i></i></div>
+        <div class="nums"><div class="num"><b data-k="pages"></b><span>pages</span></div><div class="num"><b data-k="assets"></b><span>images, styles, polices</span></div><div class="num"><b data-k="bytes"></b><span>téléchargés</span></div><div class="num"><b data-k="queued"></b><span>en file d’attente</span></div><div class="num"><b data-k="errors"></b><span>échecs</span></div></div>
+        <div class="ticker"></div>
+        <details class="log"><summary>Journal</summary><ol></ol></details>`;
+      box.prepend(el);
+    }
+    const label = { running: 'En cours', done: 'Terminé', cancelled: 'Arrêté', failed: 'Échec' }[j.status];
+    $('h3', el).textContent = j.title || new URL(j.startUrl).hostname;
+    $('.u', el).textContent = j.startUrl;
+    const b = $('.badge', el); b.textContent = label; b.className = 'badge ' + j.status;
+    const pct = Math.min(100, (j.stats.pages / j.maxPages) * 100);
+    const bar = $('.bar', el); bar.classList.toggle('indet', j.status === 'running' && !j.queued && j.stats.pages > 0 && j.taken >= j.stats.pages);
+    $('.bar i', el).style.width = (j.status === 'done' ? 100 : pct) + '%';
+    $('[data-k=pages]', el).textContent = nf.format(j.stats.pages) + ' / ' + nf.format(j.maxPages);
+    $('[data-k=assets]', el).textContent = nf.format(j.stats.assets);
+    $('[data-k=bytes]', el).textContent = fmtBytes(j.stats.bytes);
+    $('[data-k=queued]', el).textContent = nf.format(j.queued);
+    $('[data-k=errors]', el).textContent = nf.format(j.stats.errors);
+    const tk = $('.ticker', el); tk.textContent = j.current || (j.status === 'running' ? 'Préparation…' : `Fini ${ago(j.finishedAt)}`);
+    $('ol', el).innerHTML = j.log.map((l) => `<li class="${l.level}">${esc(l.msg)}</li>`).join('');
+    const acts = $('.acts', el), key = j.status;
+    if (acts.dataset.s !== key) {
+      acts.dataset.s = key;
+      acts.innerHTML = j.status === 'running'
+        ? `<button class="btn danger" data-act="cancel">Arrêter</button>`
+        : `${j.stats.pages ? `<button class="btn primary" data-act="read">Lire</button>` : ''}<button class="btn icon ghost" data-act="dismiss" title="Masquer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
+      acts.onclick = async (e) => {
+        const a = e.target.closest('[data-act]')?.dataset.act;
+        if (a === 'cancel') { await api(`/api/jobs/${j.jobId}/cancel`, { method: 'POST' }); refresh(); }
+        if (a === 'dismiss') { await api(`/api/jobs/${j.jobId}`, { method: 'DELETE' }); refresh(); }
+        if (a === 'read') openReader(j.siteId);
+      };
+    }
+  }
+}
+
+let shelfSig = '';
+function renderShelf() {
+  const shelf = $('#shelf');
+  const busy = new Set(jobs.filter((j) => j.status === 'running').map((j) => j.siteId));
+  const sig = JSON.stringify([sites.map((s) => [s.id, s.updatedAt, s.pages, s.bytes, s.title, s.favicon]), [...busy], Math.floor(Date.now() / 60000)]);
+  if (sig === shelfSig) return;
+  shelfSig = sig;
+  const total = sites.reduce((a, s) => a + (s.bytes || 0), 0);
+  $('#libMeta').textContent = sites.length ? `${sites.length} site${sites.length > 1 ? 's' : ''} · ${fmtBytes(total)}` : '';
+  if (!sites.length) {
+    shelf.style.display = 'block';
+    shelf.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v13M7.5 10.5h9M4 14c1 4 4.2 6 8 6s7-2 8-6"/></svg><h3>Rien d’ancré pour l’instant</h3><p>Colle l’adresse d’un site plus haut. Une fois téléchargé, il reste ici et s’ouvre même sans connexion.</p></div>`;
+    return;
+  }
+  shelf.style.display = '';
+  shelf.innerHTML = sites.map((s) => {
+    const host = (() => { try { return new URL(s.startUrl).host.replace(/^www\./, ''); } catch { return s.root; } })();
+    const color = spineColor(s.root || s.id);
+    const initial = esc((s.title || host).trim().charAt(0).toUpperCase());
+    return `<article class="box${busy.has(s.id) ? ' busy' : ''}" data-id="${esc(s.id)}" style="--h:${color}">
+      <div class="spine" data-act="read"><span class="tag">${busy.has(s.id) ? 'mise à jour…' : esc(host.split('.').slice(-2).join('.'))}</span>
+        <div class="fav">${s.favicon ? `<img src="${esc(s.favicon)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">` : `<span>${initial}</span>`}</div></div>
+      <div class="box-body">
+        <h3 data-act="read">${esc(s.title || host)}</h3>
+        <div class="host">${esc(s.startUrl.replace(/^https?:\/\/(www\.)?/, ''))}</div>
+        <div class="stats"><span>${nf.format(s.pages)} <em>pages</em></span><span>${fmtBytes(s.bytes)}</span><span><em>${ago(s.updatedAt)}</em></span></div>
+      </div>
+      <div class="box-actions">
+        <button class="btn primary" data-act="read">Lire hors ligne</button>
+        <button class="btn icon" data-act="update" title="Mettre à jour (retélécharger)"${busy.has(s.id) ? ' disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></button>
+        <button class="btn icon danger" data-act="delete" title="Supprimer"${busy.has(s.id) ? ' disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      </div></article>`;
+  }).join('');
+}
+
+$('#shelf').addEventListener('click', async (e) => {
+  const act = e.target.closest('[data-act]')?.dataset.act; if (!act) return;
+  const id = e.target.closest('.box').dataset.id; const s = sites.find((x) => x.id === id);
+  if (act === 'read') openReader(id);
+  if (act === 'update') {
+    if (!navigator.onLine) return toast('Il faut être en ligne pour mettre à jour.', true);
+    startCrawl(s.startUrl, { ...readOpts(), ...s.options });
+  }
+  if (act === 'delete') {
+    if (await ask('Supprimer ce site ?', `« ${s.title} » et ses ${s.pages} pages (${fmtBytes(s.bytes)}) seront effacés de ton disque.`)) {
+      try { await api('/api/sites/' + id, { method: 'DELETE' }); toast('Site supprimé'); refresh(); } catch (err) { toast(err.message, true); }
+    }
+  }
+});
+
+/* ── Lecteur ── */
+const R = { site: null, pages: [], byFile: new Map() };
+async function openReader(id, url) {
+  const site = sites.find((s) => s.id === id) || (await api('/api/sites')).find((s) => s.id === id);
+  if (!site) return toast('Site introuvable', true);
+  R.site = site;
+  R.pages = await api(`/api/sites/${id}/pages`).catch(() => []);
+  R.byFile = new Map(R.pages.map((p) => [p.file, p]));
+  $('#dTitle').textContent = `${nf.format(R.pages.length)} pages enregistrées`;
+  $('#dFilter').value = ''; renderPages();
+  go(url || site.startUrl);
+  $('#reader').classList.add('open'); $('#reader').setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+function go(url) { $('#frame').src = `/go/${R.site.id}?u=${encodeURIComponent(url)}`; }
+function closeReader() { $('#reader').classList.remove('open'); $('#reader').setAttribute('aria-hidden', 'true'); $('#frame').src = 'about:blank'; document.body.style.overflow = ''; }
+function renderPages() {
+  const f = $('#dFilter').value.trim().toLowerCase();
+  const list = R.pages.filter((p) => !f || (p.title + ' ' + p.url).toLowerCase().includes(f)).slice(0, 800);
+  const cur = R.current;
+  $('#plist').innerHTML = list.map((p) => `<button data-u="${esc(p.url)}" class="${p.file === cur ? 'on' : ''}"><b>${p.type === 'file' ? '📄 ' : ''}${esc(p.title || p.url)}</b><span>${esc(p.url.replace(/^https?:\/\/(www\.)?/, ''))}</span></button>`).join('') || `<p style="padding:14px;color:var(--mute)">Aucune page.</p>`;
+}
+$('#frame').addEventListener('load', () => {
+  let doc, loc;
+  try { doc = $('#frame').contentDocument; loc = $('#frame').contentWindow.location; } catch { return; }
+  if (!doc || loc.href === 'about:blank') return;
+  const missing = doc.querySelector('meta[name="ancre-missing"]');
+  const pill = $('#rPill');
+  if (missing) {
+    pill.textContent = 'Non téléchargée'; pill.classList.add('miss');
+    $('#rTitle').textContent = 'Page absente'; $('#rUrl').textContent = missing.content; R.current = null;
+    $('#rTab').href = missing.content || '#';
+  } else {
+    pill.textContent = 'Hors ligne'; pill.classList.remove('miss');
+    const file = decodeURIComponent(loc.pathname.replace(`/view/${R.site.id}/`, ''));
+    const p = R.byFile.get(file);
+    R.current = file;
+    $('#rTitle').textContent = doc.title || p?.title || '';
+    $('#rUrl').textContent = (p?.url || '').replace(/^https?:\/\//, '');
+    $('#rTab').href = loc.href;
+  }
+  renderPages();
+  const on = $('#plist .on'); if (on) on.scrollIntoView({ block: 'nearest' });
+});
+$('#rClose').onclick = closeReader;
+$('#rBack').onclick = () => { try { $('#frame').contentWindow.history.back(); } catch {} };
+$('#rFwd').onclick = () => { try { $('#frame').contentWindow.history.forward(); } catch {} };
+$('#rHome').onclick = () => go(R.site.startUrl);
+$('#rPages').onclick = () => $('#drawer').classList.toggle('open');
+$('#dFilter').oninput = renderPages;
+$('#plist').onclick = (e) => { const b = e.target.closest('button[data-u]'); if (b) { go(b.dataset.u); if (innerWidth < 900) $('#drawer').classList.remove('open'); } };
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#reader').classList.contains('open') && !$('#confirm').open) closeReader(); });
+if (innerWidth >= 1100) $('#drawer').classList.add('open');
+
+/* ── Recherche ── */
+let qT;
+$('#q').addEventListener('input', () => { clearTimeout(qT); qT = setTimeout(search, 220); });
+async function search() {
+  const q = $('#q').value.trim();
+  const on = q.length >= 2;
+  $('#homeView').hidden = on; $('#searchView').hidden = !on;
+  if (!on) return;
+  const res = await api('/api/search?q=' + encodeURIComponent(q)).catch(() => []);
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  const hl = (s) => esc(s).replace(re, '<mark>$1</mark>');
+  $('#searchTitle').textContent = `« ${q} »`;
+  $('#searchMeta').textContent = `${res.length}${res.length === 60 ? '+' : ''} résultat${res.length > 1 ? 's' : ''}`;
+  $('#results').innerHTML = res.length ? res.map((r) => `<a class="res" data-s="${esc(r.siteId)}" data-u="${esc(r.url)}"><div class="s">${esc(r.siteTitle)} — ${esc(r.url.replace(/^https?:\/\/(www\.)?/, ''))}</div><h4>${hl(r.title || r.url)}</h4><p>${hl(r.snippet)}</p></a>`).join('')
+    : `<div class="empty"><h3>Aucun résultat</h3><p>Rien ne correspond dans les pages enregistrées.</p></div>`;
+}
+$('#results').onclick = (e) => { const a = e.target.closest('.res'); if (a) openReader(a.dataset.s, a.dataset.u); };
+$('#home').onclick = (e) => { e.preventDefault(); $('#q').value = ''; search(); scrollTo({ top: 0, behavior: 'smooth' }); };
+
+refresh();
+setInterval(() => { if (jobs.some((j) => j.status === 'running') || document.visibilityState === 'visible') refresh(); }, 1200);
+</script>
+</body>
+</html>

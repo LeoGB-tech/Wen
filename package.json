@@ -1,0 +1,15 @@
+{
+  "name": "ancre",
+  "version": "1.0.0",
+  "description": "Aspirateur de sites pour la lecture hors ligne",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js --open"
+  },
+  "author": "LeoGB-tech",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "express": "^4.22.3"
+  }
+}
