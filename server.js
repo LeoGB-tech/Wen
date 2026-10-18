@@ -17,6 +17,7 @@ const DATA = process.env.ANCRE_DATA || path.join(__dirname, 'sites');
 fs.mkdirSync(DATA, { recursive: true });
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+const UA_ALT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0';
 
 /* ───────────────────────── Filtres pubs / traqueurs ───────────────────────── */
 
@@ -238,16 +239,35 @@ class CrawlJob {
     return `/go/${this.id}?u=${encodeURIComponent(abs)}${frag || ''}`;
   }
 
-  fetch(url) {
-    return fetch(url, {
+  async fetch(url) {
+    const doFetch = (alt) => fetch(url, {
+      method: 'GET',
       headers: {
-        'user-agent': UA,
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'accept-language': 'fr-FR,fr;q=0.9,en;q=0.8',
+        'user-agent': alt ? UA_ALT : UA,
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'accept-language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'cache-control': 'no-cache',
+        pragma: 'no-cache',
+        'upgrade-insecure-requests': '1',
+        'sec-ch-ua': '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
       },
       redirect: 'follow',
       signal: AbortSignal.any([this.abort.signal, AbortSignal.timeout(30000)]),
     });
+    let res = await doFetch(false);
+    // Certains pare-feu (Cloudflare, Sucuri…) répondent 403/405/429/503 aux robots : on réessaie une fois.
+    if ([403, 405, 406, 429, 503].includes(res.status)) {
+      try { await res.body?.cancel(); } catch {}
+      await sleep(1500);
+      res = await doFetch(true);
+    }
+    return res;
   }
 
   async readBody(res) {
@@ -564,7 +584,9 @@ class CrawlJob {
     }
     if (!res.ok) {
       try { await res.body?.cancel(); } catch {}
-      this.stats.errors++; this.note('error', `HTTP ${res.status} : ${url}`); return;
+      this.stats.errors++;
+      const why = { 401: 'connexion requise', 403: 'accès refusé par le site', 404: 'page introuvable', 405: 'le site bloque les téléchargements automatiques', 429: 'trop de requêtes, le site limite', 503: 'site indisponible ou protégé anti-robot' }[res.status];
+      this.note('error', `HTTP ${res.status}${why ? ' (' + why + ')' : ''} : ${url}`); return;
     }
     const finalUrl = res.url || url;
     if (finalUrl !== url && !this.inScope(finalUrl)) {
@@ -662,7 +684,7 @@ class CrawlJob {
       this.meta.bytes = await dirSize(this.dir);
       await this.save();
       this.status = this.abort.signal.aborted ? 'cancelled' : (this.stats.pages ? 'done' : 'failed');
-      if (this.status === 'failed') this.note('error', 'Aucune page n’a pu être téléchargée.');
+      if (this.status === 'failed') this.note('error', 'Aucune page n’a pu être téléchargée : le site refuse probablement les robots (protection Cloudflare ou similaire), ou l’adresse est inaccessible.');
       else this.note('info', `Terminé : ${this.stats.pages} page(s), ${this.stats.assets} ressource(s).`);
     } catch (e) {
       this.status = 'failed';

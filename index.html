@@ -234,6 +234,7 @@ footer{padding:40px 0 60px;color:var(--faint);font-size:13px;border-top:1px soli
   </div>
 </header>
 
+<div id="noServer" hidden style="background:var(--err);color:#fff;padding:14px 0;font-size:14px"><div class="wrap"><b>Ancre n’est pas lancé correctement.</b> Ferme cette page, double-clique sur <b>« Lancer Ancre.bat »</b> dans le dossier d’Ancre, et utilise la page qui s’ouvre sur <span class="mono">http://localhost:4321</span>. Ouvrir <span class="mono">index.html</span> directement, via Live Server ou GitHub Pages ne peut pas fonctionner : le téléchargement des sites a besoin du serveur local.</div></div>
 <main class="wrap" id="main">
   <div id="homeView">
     <div class="hero">
@@ -335,8 +336,13 @@ footer{padding:40px 0 60px;color:var(--faint);font-size:13px;border-top:1px soli
 <script>
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const NO_SERVER = 'Le serveur Ancre ne tourne pas. Lance « Lancer Ancre.bat » puis utilise http://localhost:4321 (Ancre ne marche pas en ouvrant index.html, via Live Server ou sur GitHub Pages).';
 const api = async (p, o = {}) => {
-  const r = await fetch(p, { headers: { 'content-type': 'application/json' }, ...o });
+  let r;
+  try { r = await fetch(p, { headers: { 'content-type': 'application/json' }, ...o }); }
+  catch { throw new Error(NO_SERVER); }
+  const isJson = (r.headers.get('content-type') || '').includes('json');
+  if (!isJson) throw new Error(NO_SERVER);
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || 'Erreur ' + r.status);
   return j;
@@ -386,7 +392,8 @@ $('#form').onsubmit = (e) => { e.preventDefault(); const u = $('#url').value.tri
 /* ── État ── */
 let sites = [], jobs = [], knownDone = new Set();
 async function refresh() {
-  try { [sites, jobs] = await Promise.all([api('/api/sites'), api('/api/jobs')]); } catch { return; }
+  try { [sites, jobs] = await Promise.all([api('/api/sites'), api('/api/jobs')]); $('#noServer').hidden = true; }
+  catch { $('#noServer').hidden = false; return; }
   let changed = false;
   for (const j of jobs) if (j.status !== 'running' && !knownDone.has(j.jobId)) { knownDone.add(j.jobId); changed = true; }
   renderJobs(); renderShelf();
